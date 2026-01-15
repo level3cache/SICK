@@ -26,3 +26,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Publish
       run: dotnet publish
+    - name: upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        path: .\bin\Release\net10.0\win-x64\publish\
