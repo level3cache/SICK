@@ -29,4 +29,4 @@ jobs:
     - name: upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        path: .\bin\Release\net10.0\win-x64\publish\*
+        path: D:\a\SICK\SICK\sick\bin\Release\net10.0\win-x64\publish\
