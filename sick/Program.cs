@@ -154,7 +154,7 @@ namespace sick
             if (extraFiles.Count == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Out.WriteLine("    No extra files found. Yay! \\( ﾟヮﾟ)/");
+                Console.Out.WriteLine("    No extra files found. Yay! \\(^o^)/");
                 Console.ResetColor();
             }
 
@@ -171,7 +171,7 @@ namespace sick
             if (missingFiles.Count == 0)
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("    No missing files found. Yay! \\( ﾟヮﾟ)/");
+                Console.WriteLine("    No missing files found. Yay! \\(^o^)/");
                 Console.ResetColor();
             }
         }
@@ -216,4 +216,5 @@ namespace sick
             return (extraFiles, missingFiles);
         }
     }
+
 }
