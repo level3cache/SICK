@@ -55,7 +55,7 @@ namespace sick
             while (!IsValid)
             {
                 Console.Write("Enter ID of Game to check and press Enter: ");
-                string input = Console.ReadLine();
+                string input = Console.ReadLine() ?? string.Empty;
                 if (input.Length == 0)
                 {
                     Console.WriteLine("No input provided.");
@@ -114,21 +114,24 @@ namespace sick
                         File.ReadAllBytes(
                             $@"C:\Program Files (x86)\Steam\depotcache\{depot.Key}_{depot.Value}.manifest");
                 }
-                catch (DirectoryNotFoundException e)
+                catch (DirectoryNotFoundException)
                 {
                     Console.WriteLine("Error encountered. Is this Game's drive connected?");
                 }
-                catch (FileNotFoundException e)
+                catch (FileNotFoundException)
                 {
                     Console.WriteLine("Manifest File not found. Try to verify files using Steam first!");
                 }
                 
                 var manifest = DepotManifest.Deserialize(encryptedManifest);
                 var decryptedFiles = manifest.Files;
-                foreach (var file in decryptedFiles)
+                if (decryptedFiles != null && decryptedFiles.Count > 0)
                 {
-                    if (file.TotalSize == 0) continue;
-                    expectedFiles.Add(file.FileName.ToString());
+                    foreach (var file in decryptedFiles)
+                    {
+                        if (file.TotalSize == 0) continue;
+                        expectedFiles.Add(file.FileName.ToString());
+                    }
                 }
             }
             
