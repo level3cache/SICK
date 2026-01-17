@@ -14,8 +14,9 @@ namespace sick
     internal static class Program
     {
         private static List<GameInfo> _gameList = [];
-        
-        private static void Main()
+
+        private static readonly HttpClient _httpClient = new HttpClient();
+        private static async Task Main()
         {
             dynamic libraryfolders = VdfConvert.Deserialize( File.ReadAllText(@"C:\Program Files (x86)\Steam\steamapps\libraryfolders.vdf"));
             Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -24,7 +25,51 @@ namespace sick
                 foreach (var app in drive.Value.apps)
                 {
                     var currentGameInfo = new GameInfo();
-                    dynamic appmanifest = VdfConvert.Deserialize( File.ReadAllText(@$"{drive.Value.path}\steamapps\appmanifest_{app.Key}.acf"));
+                    dynamic appmanifest;
+                    try
+                    {
+                        appmanifest =
+                            VdfConvert.Deserialize(
+                                File.ReadAllText(@$"{drive.Value.path}\steamapps\appmanifest_{app.Key}.acf"));
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        var driveNameWithExtension = drive.Value.path.ToString();
+                        var driveNameWithoutExtension = driveNameWithExtension.TrimEnd("SteamLibrary");
+                        var GameName = await GetNameFromAppID(app.Key.ToString());
+                        if (GameName != String.Empty)
+                        {
+                            Console.WriteLine(
+                                $"Non Fatal Error: File \"appmanifest_{app.Key}.acf\" of Game \"{GameName}\" not found on Drive \"{driveNameWithoutExtension}\", is it even connected?");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(
+                                $"Non Fatal Error: File \"appmanifest_{app.Key}.acf\" not found on Drive \"{driveNameWithoutExtension}\", is it even connected?");
+                            Console.ResetColor();
+                        }
+                        continue;
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        var GameName = await GetNameFromAppID(app.Key.ToString());
+                        if (GameName != String.Empty)
+                        {
+                            Console.WriteLine(
+                                $"Non Fatal Error: AppManifest \"appmanifest_{app.Key}.acf\" of Game \"{GameName}\" not found, please verify game in Steam first!");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(
+                                $"Non Fatal Error: AppManifest \"appmanifest_{app.Key}.acf\" not found, please verify game in Steam first!");
+                            Console.ResetColor();
+                        }
+                        continue;
+                    }
                     var gameName = appmanifest.Value.name;
                     var installPath = @$"{drive.Value.path}\steamapps\common\{appmanifest.Value.installdir}";
                     var appId = uint.Parse($"{appmanifest.Value.appid}");
@@ -217,6 +262,28 @@ namespace sick
             }
 
             return (extraFiles, missingFiles);
+        }
+
+        public static async Task<string> GetNameFromAppID(string appId)
+        {
+            try
+            {
+                var response =
+                    await _httpClient.GetStringAsync($"https://store.steampowered.com/api/appdetails?appids={appId}");
+
+                if (response.Contains("\"name\":\""))
+                {
+                    int start = response.IndexOf("\"name\":\"") + 8;
+                    int end = response.IndexOf("\"", start);
+                    return response.Substring(start, end - start);
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Couldn't get game Name from steam");
+            }
+
+            return String.Empty;
         }
     }
 
